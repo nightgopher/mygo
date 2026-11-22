@@ -27,6 +27,7 @@ import (
 //			"sources": ["android/*.kt"], "class": "LocationPlugin",
 //			"permissions": ["ACCESS_FINE_LOCATION"],
 //			"dependencies": ["androidx.biometric:biometric:1.1.0"],
+//			"queries": ["android.intent.action.TTS_SERVICE"],
 //			"application": ["<service android:name=\"...\" />"]
 //		}
 //	}}
@@ -61,6 +62,8 @@ type pluginAndroid struct {
 	Class        string   `json:"class"`
 	Permissions  []string `json:"permissions"`
 	Dependencies []string `json:"dependencies"`
+	// Queries are intent actions whose services the plugin needs to discover.
+	Queries []string `json:"queries"`
 	// Application are XML fragments the manifest's <application> takes.
 	Application []string `json:"application"`
 }
@@ -289,6 +292,20 @@ func (ps mobilePlugins) dependencies() []string {
 			for _, d := range p.Android.Dependencies {
 				if !slices.Contains(out, d) {
 					out = append(out, d)
+				}
+			}
+		}
+	}
+	return out
+}
+
+func (ps mobilePlugins) queries() []string {
+	var out []string
+	for _, p := range ps {
+		if p.Android != nil {
+			for _, action := range p.Android.Queries {
+				if action != "" && !slices.Contains(out, action) {
+					out = append(out, action)
 				}
 			}
 		}

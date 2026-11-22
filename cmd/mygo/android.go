@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"image"
@@ -236,6 +237,15 @@ func androidManifest(c *Config, plugins mobilePlugins) []byte {
 	b.WriteString(`<manifest xmlns:android="http://schemas.android.com/apk/res/android">` + "\n")
 	for _, p := range perms {
 		fmt.Fprintf(&b, "    <uses-permission android:name=%q />\n", p)
+	}
+	if queries := plugins.queries(); len(queries) > 0 {
+		b.WriteString("    <queries>\n")
+		for _, action := range queries {
+			b.WriteString("        <intent><action android:name=\"")
+			_ = xml.EscapeText(&b, []byte(action))
+			b.WriteString("\" /></intent>\n")
+		}
+		b.WriteString("    </queries>\n")
 	}
 	theme := "Theme.MyGo"
 	if c.Android.Splash != "" {
