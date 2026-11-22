@@ -101,6 +101,11 @@ imports, compiles its code into the host and registers it:
 }
 ```
 
+Android plugins can declare service intent actions in `queries` when they
+need to discover services from other apps, for example
+`"queries": ["android.intent.action.TTS_SERVICE"]`. MyGo combines these
+into the manifest's `<queries>` element without granting broad package access.
+
 Go calls it with JSON, and hears its events:
 
 ```go

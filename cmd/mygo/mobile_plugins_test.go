@@ -25,10 +25,10 @@ func TestMobilePlugins(t *testing.T) {
 	ps := mobilePlugins{
 		{ID: "a", dir: dir,
 			IOS:     &pluginIOS{Sources: []string{"ios/*.swift"}, Class: "APlugin", Frameworks: []string{"CoreLocation"}, InfoPlist: map[string]any{"UIBackgroundModes": []any{"audio"}, "K": "v"}},
-			Android: &pluginAndroid{Sources: []string{"android/*.kt"}, Class: "APlugin", Permissions: []string{"CAMERA"}, Dependencies: []string{"x:y:1"}}},
+			Android: &pluginAndroid{Sources: []string{"android/*.kt"}, Class: "APlugin", Permissions: []string{"CAMERA"}, Dependencies: []string{"x:y:1"}, Queries: []string{"android.intent.action.TTS_SERVICE"}}},
 		{ID: "b", dir: dir,
 			IOS:     &pluginIOS{Class: "BPlugin", Frameworks: []string{"CoreLocation", "Photos"}, InfoPlist: map[string]any{"UIBackgroundModes": []any{"fetch"}}},
-			Android: &pluginAndroid{Class: "BPlugin", Dependencies: []string{"x:y:1", "z:w:2"}, Application: []string{"<service />"}}},
+			Android: &pluginAndroid{Class: "BPlugin", Dependencies: []string{"x:y:1", "z:w:2"}, Application: []string{"<service />"}, Queries: []string{"android.intent.action.TTS_SERVICE", `example."escape`}}},
 	}
 	swift := t.TempDir()
 	if err := ps.writeSwift(swift); err != nil {
@@ -66,6 +66,9 @@ func TestMobilePlugins(t *testing.T) {
 	m := string(androidManifest(&Config{}, ps))
 	if !strings.Contains(m, "android.permission.CAMERA") || !strings.Contains(m, "<service />") {
 		t.Errorf("manifest: %s", m)
+	}
+	if strings.Count(m, `android.intent.action.TTS_SERVICE`) != 1 || !strings.Contains(m, `example.&#34;escape`) || strings.Index(m, "<queries>") > strings.Index(m, "<application") {
+		t.Errorf("manifest queries: %s", m)
 	}
 	// A package may not reach outside itself.
 	bad := &mobilePlugin{ID: "c", dir: dir}
