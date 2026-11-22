@@ -568,3 +568,30 @@ func TestTouchReach(t *testing.T) {
 		t.Errorf("far from it: %d clicks", clicks)
 	}
 }
+
+// A second swipe takes over an ongoing fling without requiring another touch.
+func TestTouchPanTakesOverFling(t *testing.T) {
+	var s ScrollState
+	tt := coreNewTester(func(c *context) {
+		coreScroll(c).Fill().TrackScroll(&s).Children(func() { coreBox(c).Height(3000).Shrink(0) })
+	}, 200, 200)
+	tt.FingerDown(100, 170)
+	tt.Advance(16 * time.Millisecond)
+	tt.FingerMove(100, 130)
+	tt.Advance(16 * time.Millisecond)
+	tt.FingerMove(100, 90)
+	tt.Advance(16 * time.Millisecond)
+	tt.FingerUp(100, 50)
+	tt.Advance(16 * time.Millisecond)
+	tt.FingerDown(100, 170)
+	before := s.Y
+	tt.Advance(16 * time.Millisecond)
+	tt.FingerMove(100, 130)
+	tt.Advance(16 * time.Millisecond)
+	tt.FingerMove(100, 80)
+	after := s.Y
+	tt.FingerUp(100, 80)
+	if after <= before {
+		t.Fatalf("second pan did not take over fling: before %v, after %v", before, after)
+	}
+}

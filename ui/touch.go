@@ -212,7 +212,13 @@ func (rt *engine) touchEvent(ev platform.SurfaceEvent, x, y float32) bool {
 			return true
 		}
 		if t.swallow {
-			return true
+			// A tap stops the fling without clicking. A drag that starts while
+			// it is moving should take over the scroll in the same gesture.
+			if math.Hypot(float64(x-t.x0), float64(y-t.y0)) < touchSlop {
+				return true
+			}
+			t.swallow = false
+			t.waiting = true
 		}
 		if t.dragging {
 			return false
